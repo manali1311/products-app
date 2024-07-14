@@ -45,7 +45,6 @@ const Form = ({ editProduct, productToEdit, handleEditClose }) => {
       handleEditClose();
     } else {
       product.id = items.length + 1;
-
       dispatch(addProduct(product));
     }
     setProduct({ id: "", name: "", description: "", price: "", category: "" });
@@ -60,7 +59,7 @@ const Form = ({ editProduct, productToEdit, handleEditClose }) => {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      sx={{ display: "flex", flexDirection: "column", gap: 2, padding: 2 }}
     >
       <TextField
         label="Name"
@@ -82,6 +81,7 @@ const Form = ({ editProduct, productToEdit, handleEditClose }) => {
         value={product.price}
         onChange={(e) => handleChange(product.id, e)}
         required
+        inputProps={{ type: "number" }}
       />
       <TextField
         label="Category"

@@ -3,7 +3,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { GetProducts } from "../../services/products/index";
-import { Button, Dialog } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { toast } from "react-toastify";
 import { Delete, Edit } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,9 +17,12 @@ const List = () => {
     () => ({ width: "100%", height: "100%", marginTop: 2 }),
     []
   );
+
   const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
   const [rowData, setRowData] = useState([]);
   const [editOpen, setEditOpen] = useState(false);
+  const [delOpen, setDelOpen] = useState(false);
+  const [delVal, setDelVal] = useState("");
   const [productToEdit, setProductToEdit] = useState(null);
 
   const dispatch = useDispatch();
@@ -55,17 +58,16 @@ const List = () => {
     },
     {
       field: "category",
-      filter: "agNumberColumnFilter",
+      filter: "agTextColumnFilter",
       cellStyle: { textAlign: "left" },
     },
-
     {
       headerName: "Edit",
       field: "Edit",
       cellStyle: { textAlign: "center" },
       cellRenderer: (params) => (
         <Button
-          sx={{ display: "flex", alignItems: "center", color: "black" }}
+          sx={{ display: "flex", justifyContent: "center", color: "black" }}
           onClick={() => handleEditOpen(params?.data)}
         >
           <Edit />
@@ -80,13 +82,22 @@ const List = () => {
       cellRenderer: (params) => (
         <Button
           sx={{ display: "flex", alignItems: "center", color: "black" }}
-          onClick={() => handleRemove(params)}
+          onClick={() => handleRemoveOpen(params.data.id)}
         >
           <Delete />
         </Button>
       ),
     },
   ];
+
+  const handleRemoveOpen = (val) => {
+    setDelOpen(true);
+    setDelVal(val);
+  };
+
+  const handleRemoveClose = () => {
+    setDelOpen(false);
+  };
 
   const handleEditOpen = (data) => {
     setEditOpen(true);
@@ -97,13 +108,12 @@ const List = () => {
     setEditOpen(false);
   };
 
-  const handleRemove = (params) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      const delVal = rowData?.filter((item) => item?.id !== params.data.id);
-      setRowData(delVal);
-      dispatch(deleteProduct(params.data.id));
-      toast.success("Item Removed Successfully.");
-    }
+  const handleRemove = () => {
+    const deleteVal = rowData?.filter((item) => item?.id !== delVal);
+    setRowData(deleteVal);
+    dispatch(deleteProduct(delVal));
+    toast.success("Item Removed Successfully.");
+    setDelOpen(false);
   };
 
   const editProduct = (updatedProduct) => {
@@ -112,7 +122,6 @@ const List = () => {
         product.id === updatedProduct.id ? updatedProduct : product
       )
     );
-    console.log(updatedProduct);
     setProductToEdit(null);
   };
 
@@ -147,18 +156,45 @@ const List = () => {
           onGridReady={onGridReady}
           domLayout="autoHeight"
           rowHeight={50}
-          rowSelection={"multiple"}
           suppressRowClickSelection={true}
           pagination={true}
           paginationPageSize={10}
         />
       </div>
-      <Dialog open={editOpen} onClose={handleEditClose}>
+      <Dialog
+        open={editOpen}
+        onClose={handleEditClose}
+        sx={{ "& .MuiDialog-paper": { width: "80%", maxHeight: 500 } }}
+      >
         <Form
           editProduct={editProduct}
           productToEdit={productToEdit}
           handleEditClose={handleEditClose}
         />
+      </Dialog>
+
+      <Dialog
+        open={delOpen}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Are you sure you want to delete this product?"}
+        </DialogTitle>
+
+        <DialogActions>
+          <Button variant="contained" color="success" onClick={handleRemove}>
+            Yes
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleRemoveClose}
+            autoFocus
+          >
+            No
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
   );
